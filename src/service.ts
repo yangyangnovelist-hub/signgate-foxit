@@ -6,7 +6,7 @@ import { canonicalEmail, approvalPhrase, sha256 } from './hash.js';
 import { FileDraftStore, type DraftStoreLike } from './draft-store.js';
 import { DemoESignProvider, FoxitESignProvider, eSignCredentialsPresent, liveSendEnabled, type ESignProvider } from './esign.js';
 import { DemoPdfEngine, FoxitMcpPdfEngine, foxitCredentialsPresent, type PdfEngine } from './pdf-engine.js';
-import { ResilientPlanner, type DocumentPlanner } from './planner.js';
+import { DeterministicPlanner, ResilientPlanner, type DocumentPlanner } from './planner.js';
 import { renderAgreement } from './template.js';
 import {
   PrepareDraftSchema,
@@ -313,9 +313,12 @@ function extractProviderStatus(snapshot: Record<string, unknown>): string {
 export function createDefaultService(runtimeDir = resolve('runtime')): SignGateService {
   const pdfEngine = foxitCredentialsPresent() ? new FoxitMcpPdfEngine() : new DemoPdfEngine();
   const eSignProvider = eSignCredentialsPresent() ? new FoxitESignProvider() : new DemoESignProvider();
+  const planner = process.env.SIGNGATE_PLANNER_MODE === 'deterministic'
+    ? new DeterministicPlanner()
+    : new ResilientPlanner();
   return new SignGateService({
     runtimeDir,
-    planner: new ResilientPlanner(),
+    planner,
     pdfEngine,
     eSignProvider,
     audit: new AuditTrail(resolve(runtimeDir, 'audit.jsonl')),
