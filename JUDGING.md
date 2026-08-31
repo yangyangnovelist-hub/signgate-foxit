@@ -31,7 +31,7 @@
 | “Can a disabled live path burn approval?” | `LIVE_SEND_DISABLED` occurs before token consumption or provider call |
 | “Did an LLM write legal obligations?” | `planner.ts`: model clauses are discarded |
 | “Is this really Foxit?” | MCP tool evidence + direct eSign endpoints + folder ID |
-| “Is it actually signed?” | Final collection is impossible before terminal Foxit status |
+| “Is it actually signed?” | `EXECUTED` status, second SHA-256, valid detached signature, and pixel-identical DSS revision in `docs/evidence/foxit-live-proof.md` |
 
 ## Evidence commands
 
@@ -44,4 +44,4 @@ Expected baseline: 48 tests; at least 85% statements and lines, 72% branches, an
 
 ## Submission boundary
 
-The live Foxit PDF lifecycle and one consented self-test eSign invitation were executed successfully on 2026-09-01. The sent envelope was then recovered across a cold service restart and re-read as `SHARED` with new dispatch disabled. It is still signature-pending. Do not claim a human signature or final signed file until the recipient acts and **Collect completed Foxit proof** returns the terminal status plus second SHA-256.
+The live Foxit PDF lifecycle and one consented self-test eSign invitation were executed successfully on 2026-09-01. The signer completed the Foxit sandbox flow, the envelope reached `EXECUTED`, and SignGate downloaded and hashed the final PDF. The completed proof then survived a cold restart with its audit chain valid and new dispatch disabled. The visible `TEST MODE` watermark must remain disclosed; do not describe this as a production or legally deployable signature transaction.

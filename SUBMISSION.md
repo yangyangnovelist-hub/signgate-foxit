@@ -55,11 +55,14 @@ The hard part was not calling an API. It was handling ambiguity safely:
 - adversarial recipient and byte-mutation blocks;
 - live-verified official Foxit MCP integration with remote cleanup;
 - direct eSign create, terminal status, and completed-file path;
-- one real eSign invitation to a consented self-test recipient with signature-pending status re-read;
+- one real sandbox eSign invitation to a consented self-test recipient, completed to `EXECUTED` and downloaded with a second SHA-256;
+- valid detached SHA-256 signature evidence plus a pixel-identical post-sign DSS revision;
 - append-only hash-chained audit evidence that persists and verifies across restarts;
 - atomic, checksum-verified recovery of the sent envelope and spent approval across a cold restart;
 - 48 tests and 92.79% core statement/line coverage;
 - verified desktop, mobile, motion, and reduced-motion browser flows.
+
+The completed provider artifact visibly carries Foxit's sandbox `TEST MODE` watermark. It proves the end-to-end mechanism and human control, not production legal execution.
 
 ## What we learned
 

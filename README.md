@@ -169,10 +169,13 @@ Current verified result:
 - state-linked Motion and tsParticles effects load without console errors;
 - reduced-motion mode removes ambient effects;
 - live Foxit MCP returned a visually verified 85,253-byte A4 PDF;
-- live Foxit eSign accepted one invitation to a consented self-test recipient and a fresh status read correctly reports signature pending.
-- the real sent envelope and spent approval survive a cold restart while new dispatch remains disabled.
+- live Foxit eSign accepted one invitation to a consented self-test recipient, reached `EXECUTED`, and returned the signed PDF with a second SHA-256;
+- the completed envelope, spent approval, final PDF hash, and valid audit chain survive a cold restart while new dispatch remains disabled;
+- the signed revision and final DSS-appended revision render pixel-identically.
 
 With the app running in demo mode, browser verification is reproducible with `npm run test:e2e`; the native Playwright script lives at [`test/browser-e2e.mjs`](test/browser-e2e.mjs).
+
+The privacy-safe provider evidence summary is in [`docs/evidence/foxit-live-proof.md`](docs/evidence/foxit-live-proof.md). The raw signed PDF is intentionally gitignored because it contains signer identity and signature data.
 
 ## Honest current status
 
@@ -186,11 +189,12 @@ With the app running in demo mode, browser verification is reproducible with `np
 | Official Foxit MCP adapter | Real, regression-tested, and executed against Foxit |
 | Live Foxit PDF proof | Complete; provider-rendered PDF downloaded, hashed, and visually inspected |
 | Foxit eSign activation and draft | Complete in the US-region sandbox |
-| Live eSign invitation | Complete; sent once to a consented self-test recipient, then status re-read as pending |
-| Cross-restart envelope recovery | Complete; recovered from checksummed state and re-queried with new dispatch disarmed |
-| Final human signature proof | Pending the recipient's manual signature in the delivered invitation |
+| Live eSign invitation | Complete; sent once to a consented self-test recipient |
+| Final signed PDF | Complete in Foxit sandbox; `EXECUTED`, downloaded, hashed, structurally checked, and visually inspected |
+| Cross-restart envelope recovery | Complete; final proof recovered from checksummed state with new dispatch disarmed |
+| Signature integrity | Detached SHA-256 PKCS#7 signature reported valid; post-sign DSS revision renders identically |
 
-No README, UI, or submission should claim a completed signature or final signed PDF until the recipient acts and the matching provider evidence exists.
+The completed artifact visibly carries Foxit's `TEST MODE` watermark. It proves the sandbox workflow and must not be described as a production or legally deployable signature transaction.
 
 ## Project map
 
@@ -203,6 +207,7 @@ No README, UI, or submission should claim a completed signature or final signed 
 | `src/service.ts` | Exact-artifact gate, one-shot semantics, terminal proof collection |
 | `src/draft-store.ts` | Atomic, checksum-verified draft and envelope recovery across restarts |
 | `src/audit.ts` | Append-only hash-chained evidence |
+| `docs/evidence/foxit-live-proof.md` | Privacy-safe summary of the executed Foxit sandbox proof |
 | `public/` | Judge-facing product interface |
 | `test/` | Unit, API, adapter, adversarial, and browser checks |
 
@@ -211,6 +216,7 @@ No README, UI, or submission should claim a completed signature or final signed 
 - This event build supports one document and one signer per run.
 - The built-in agreement is a short evaluation agreement, not a universal legal-document generator.
 - SignGate is not a law firm and does not provide legal advice.
+- The completed Foxit proof is a sandbox `TEST MODE` transaction, not production legal execution.
 - Draft/envelope state is local, private-permission JSON plus content digests; production deployment should use an authenticated transactional datastore.
 - The audit trail is a persistent, restart-verified local JSONL chain; production deployment should move it to access-controlled WORM or equivalent durable storage.
 - eSign completion is currently checked on demand. A production deployment should also verify Foxit webhooks.
