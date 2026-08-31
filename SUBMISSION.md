@@ -26,7 +26,7 @@ After signing, SignGate re-reads Foxit's terminal envelope status, downloads the
 - Foxit's official `@foxitsoftware/foxit-pdf-api-mcp-server` for upload, HTML-to-PDF, download, and cleanup;
 - Foxit eSign REST API for one-recipient signature dispatch, status, and final download;
 - SHA-256 content addressing and one-shot receipts for the safety gate;
-- a responsive editorial control-room UI in plain HTML/CSS/JavaScript;
+- a responsive chain-of-custody UI in HTML/CSS/JavaScript with MIT-licensed Motion and tsParticles effects;
 - Vitest, Supertest, and native Playwright for verification.
 
 ## What is novel
@@ -43,18 +43,23 @@ The hard part was not calling an API. It was handling ambiguity safely:
 - a timeout may mean the email was already sent, so automatic retry is unsafe;
 - Text Tag party numbers and recipient sequences must stay aligned;
 - signature completion must be re-read from Foxit before a final document can be claimed;
-- demo mode must remain useful without pretending provider evidence exists.
+- demo mode must remain useful without pretending provider evidence exists;
+- the official MCP upload tool accepts an absolute `filePath`, not an in-memory base64 substitute, which only a live provider run exposed;
+- a local audit chain must resume and verify across restarts rather than silently opening a new genesis segment;
+- sent-envelope state must survive restart while a disabled live-send switch blocks new invitations before consuming approval.
 
 ## Accomplishments
 
 - exact PDF and recipient binding;
 - one approval = one provider attempt;
 - adversarial recipient and byte-mutation blocks;
-- official Foxit MCP integration with remote cleanup;
+- live-verified official Foxit MCP integration with remote cleanup;
 - direct eSign create, terminal status, and completed-file path;
-- append-only hash-chained audit evidence;
-- 38 tests and 93.15% core statement/line coverage;
-- verified desktop and mobile browser flows.
+- one real eSign invitation to a consented self-test recipient with signature-pending status re-read;
+- append-only hash-chained audit evidence that persists and verifies across restarts;
+- atomic, checksum-verified recovery of the sent envelope and spent approval across a cold restart;
+- 48 tests and 92.79% core statement/line coverage;
+- verified desktop, mobile, motion, and reduced-motion browser flows.
 
 ## What we learned
 
@@ -62,7 +67,7 @@ The trustworthy product boundary is not “AI generated a correct document.” I
 
 ## What's next
 
-- durable audit storage and authenticated teams;
+- remote WORM audit storage and authenticated teams;
 - verified Foxit webhooks in addition to on-demand status checks;
 - multi-party sequence visualization;
 - policy packs for procurement, sales, HR, and clinical-trial operations;
@@ -70,4 +75,4 @@ The trustworthy product boundary is not “AI generated a correct document.” I
 
 ## Testing instructions
 
-Run `npm install && npm start`, open `http://127.0.0.1:8787`, and follow the 90-second proof in `JUDGING.md`. Demo mode sends nothing. For live testing, configure the Foxit variables from `.env.example`; keep `SIGNGATE_LIVE_SEND_ENABLED=false` until using a consented signer.
+Run `npm install && npm start`, open `http://127.0.0.1:8787`, and follow the 90-second proof in `JUDGING.md`. With the app running in demo mode, `npm run test:e2e` reproduces the browser checks. Demo mode sends nothing. For live testing, configure the Foxit variables from `.env.example`; keep `SIGNGATE_LIVE_SEND_ENABLED=false` until using a consented signer.

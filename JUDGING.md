@@ -27,6 +27,8 @@
 | “What if it changes one PDF byte?” | Artifact mutation test in `test/service.test.ts` |
 | “Can it reuse my yes?” | `APPROVAL_SPENT` test |
 | “What happens on a timeout?” | `uncertain` state; token remains spent; no retry |
+| “What happens if the service restarts?” | Sent envelope and spent receipt reload; final collection still works; no resend |
+| “Can a disabled live path burn approval?” | `LIVE_SEND_DISABLED` occurs before token consumption or provider call |
 | “Did an LLM write legal obligations?” | `planner.ts`: model clauses are discarded |
 | “Is this really Foxit?” | MCP tool evidence + direct eSign endpoints + folder ID |
 | “Is it actually signed?” | Final collection is impossible before terminal Foxit status |
@@ -38,8 +40,8 @@ npm run check
 npm run test:coverage
 ```
 
-Expected baseline: 38 tests; at least 85% statements and lines, 72% branches, and 82% functions. Current observed core statement/line coverage is 93.15%.
+Expected baseline: 48 tests; at least 85% statements and lines, 72% branches, and 82% functions. Current observed coverage is 92.79% statements/lines, 75.52% branches, and 95.16% functions.
 
 ## Submission boundary
 
-Until live credentials are available, describe the Foxit adapters as implemented and tested, not as executed against the provider. Do not claim a sent envelope, human signer, Foxit PDF ID, or final signed file without the matching provider evidence.
+The live Foxit PDF lifecycle and one consented self-test eSign invitation were executed successfully on 2026-09-01. The sent envelope was then recovered across a cold service restart and re-read as `SHARED` with new dispatch disabled. It is still signature-pending. Do not claim a human signature or final signed file until the recipient acts and **Collect completed Foxit proof** returns the terminal status plus second SHA-256.

@@ -99,6 +99,25 @@ describe('SignGateService', () => {
     await expect(service.send(draft.id)).rejects.toMatchObject({ code: 'APPROVAL_REQUIRED' });
   });
 
+  it('blocks a disarmed live provider before consuming approval or making a provider call', async () => {
+    const send = vi.fn();
+    const disarmedProvider = { mode: 'live' as const, canSend: () => false, send };
+    const disarmedService = new SignGateService({
+      runtimeDir,
+      planner: new DeterministicPlanner(),
+      pdfEngine: new DemoPdfEngine(),
+      eSignProvider: disarmedProvider,
+      audit: new AuditTrail(),
+    });
+    const draft = await disarmedService.prepare(validInput);
+    await disarmedService.approve(draft.id, { phrase: draft.approvalPhrase, attestExactRecipient: true, attestAuthority: true });
+
+    await expect(disarmedService.send(draft.id)).rejects.toMatchObject({ code: 'LIVE_SEND_DISABLED' });
+    expect(disarmedService.get(draft.id).approval?.consumedAt).toBeUndefined();
+    expect(disarmedService.get(draft.id).status).toBe('approved');
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it('consumes one approval for one transparent simulation', async () => {
     const draft = await service.prepare(validInput);
     await service.approve(draft.id, { phrase: draft.approvalPhrase, attestExactRecipient: true, attestAuthority: true });
@@ -183,6 +202,45 @@ describe('SignGateService', () => {
     });
     expect(completed.finalProof?.signedSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(liveService.audit.events.at(-1)?.type).toBe('signed_artifact_collected');
+  });
+
+  it('recovers a sent envelope after restart and collects its completed signed artifact', async () => {
+    const provider = {
+      mode: 'live' as const,
+      send: async () => ({
+        mode: 'live' as const,
+        status: 'sent' as const,
+        folderId: 'folder-restart',
+        providerStatus: 'SENT',
+        detail: 'sent',
+      }),
+      status: async () => ({ folder: { folderId: 'folder-restart', folderStatus: 'COMPLETED' } }),
+      download: async () => Buffer.from('%PDF-signed-after-restart'),
+    };
+    const auditPath = join(runtimeDir, 'audit.jsonl');
+    const firstProcess = new SignGateService({
+      runtimeDir,
+      planner: new DeterministicPlanner(),
+      pdfEngine: new DemoPdfEngine(),
+      eSignProvider: provider,
+      audit: new AuditTrail(auditPath),
+    });
+    const draft = await firstProcess.prepare(validInput);
+    await firstProcess.approve(draft.id, { phrase: draft.approvalPhrase, attestExactRecipient: true, attestAuthority: true });
+    await firstProcess.send(draft.id);
+
+    const restartedProcess = new SignGateService({
+      runtimeDir,
+      planner: new DeterministicPlanner(),
+      pdfEngine: new DemoPdfEngine(),
+      eSignProvider: provider,
+      audit: new AuditTrail(auditPath),
+    });
+    expect(restartedProcess.get(draft.id)).toMatchObject({ status: 'sent', envelope: { folderId: 'folder-restart' } });
+
+    const completed = await restartedProcess.collectFinal(draft.id);
+    expect(completed).toMatchObject({ status: 'completed', finalProof: { providerStatus: 'COMPLETED' } });
+    expect(restartedProcess.audit.verify()).toBe(true);
   });
 
   it('does not download or claim a final PDF while the signature is pending', async () => {

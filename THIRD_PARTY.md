@@ -10,10 +10,13 @@ SignGate follows a reuse-first implementation strategy.
 | Express | HTTP application | MIT |
 | dotenv | Server-side environment loading | BSD-2-Clause |
 | Zod | Runtime schemas | MIT |
+| Motion `13.1.1` | State-linked document, route, seal, and signature animation | [motiondivision/motion](https://github.com/motiondivision/motion), MIT |
+| tsParticles Slim `4.4.0` | Low-density provenance particles confined to the evidence route | [tsparticles/tsparticles](https://github.com/tsparticles/tsparticles), MIT |
 | Ollama | Local inference runtime | MIT |
 | qwen2.5:1.5b-instruct | Default local extraction model | Qwen model license |
 | Vitest / Supertest | Unit and API tests | MIT |
-| Playwright | Browser verification | Apache-2.0 |
-| Fraunces / Sometype Mono | Product typography loaded from Google Fonts | SIL Open Font License |
+| Playwright `1.62.1` | Reproducible Chrome browser verification | Apache-2.0 |
+| esbuild | Bundles the local animation dependencies | MIT |
+| IBM Plex Sans Condensed / IBM Plex Mono / Newsreader | Product typography loaded from Google Fonts | SIL Open Font License |
 
-The Foxit MCP server is consumed as a pinned npm dependency and launched as published. SignGate does not copy or reimplement its PDF API client.
+The Foxit MCP server and animation engines are consumed as pinned npm dependencies. SignGate does not copy or reimplement their clients or runtimes.

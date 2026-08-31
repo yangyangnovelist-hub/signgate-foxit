@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -33,7 +33,12 @@ describe('PDF engines', () => {
       close,
       async callTool(input) {
         calls.push(input);
-        if (input.name === 'upload_document') return textPayload({ success: true, documentId: 'source-1' });
+        if (input.name === 'upload_document') {
+          const args = input.arguments ?? {};
+          expect(args).toEqual({ filePath: join(runtimeDir, 'draft.html') });
+          expect(await readFile(String(args.filePath), 'utf8')).toBe('<html>agreement</html>');
+          return textPayload({ success: true, documentId: 'source-1' });
+        }
         if (input.name === 'pdf_from_html') return textPayload({ success: true, taskId: 'task-1', resultDocumentId: 'pdf-1' });
         if (input.name === 'download_document') {
           await writeFile(String(input.arguments?.outputPath), Buffer.from('%PDF-live-proof'));
@@ -64,6 +69,7 @@ describe('PDF engines', () => {
       'delete_document',
       'delete_document',
     ]);
+    await expect(readFile(join(runtimeDir, 'draft.html'))).rejects.toMatchObject({ code: 'ENOENT' });
     expect(factory).toHaveBeenCalledOnce();
     await engine.close();
     expect(close).toHaveBeenCalledOnce();

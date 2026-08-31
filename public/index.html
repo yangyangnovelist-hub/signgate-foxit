@@ -3,35 +3,68 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="SignGate turns a brief into a Foxit PDF, then permits eSign dispatch only for the exact artifact and recipient a human approved.">
-  <title>SignGate · Exact-artifact approval for document agents</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2317211d'/%3E%3Cpath d='M16 16h32v9H25v14h14v-7h9v16H16z' fill='%2369da86'/%3E%3C/svg%3E">
+  <meta name="description" content="SignGate binds one human approval to one exact Foxit PDF, one recipient, and one dispatch attempt.">
+  <title>SignGate · Exact-artifact approval</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%230b1824'/%3E%3Cpath d='M15 15h34v9H24v16h16v-7h9v16H15z' fill='%23ef5b3f'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Sometype+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,650&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script type="module" src="/app.js"></script>
+  <script type="module" src="/experience.js"></script>
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
+  <div class="security-grid" aria-hidden="true"></div>
   <header class="topbar">
     <a class="wordmark" href="/" aria-label="SignGate home">
-      <span class="wordmark-mark">SG</span>
-      <span>SignGate</span>
+      <span class="wordmark-mark" aria-hidden="true"><i></i></span>
+      <span class="wordmark-copy"><strong>SignGate</strong><small>EXACT ARTIFACT CONTROL</small></span>
     </a>
     <div class="live-state" id="live-state" aria-live="polite">
       <span class="state-dot"></span>
       <span>Inspecting runtime</span>
     </div>
-    <a class="source-link" href="https://github.com/foxitsoftware/foxit-pdf-api-mcp-server" target="_blank" rel="noreferrer">Official Foxit MCP ↗</a>
+    <a class="source-link" href="https://github.com/foxitsoftware/foxit-pdf-api-mcp-server" target="_blank" rel="noreferrer">Official Foxit MCP <span>↗</span></a>
   </header>
 
   <main>
-    <section class="hero">
-      <div class="hero-kicker">DOCUMENT AUTONOMY / WITH A DEAD MAN'S SWITCH</div>
-      <h1>Let the agent prepare <em>anything.</em><br>Let it send only <span>this.</span></h1>
-      <p class="hero-copy">A prompt-to-signature workflow where one human approval authorizes one exact document, one exact recipient, one time. Change a byte or an address and the gate closes.</p>
-      <ol class="rail" aria-label="Workflow">
+    <section class="case-header" aria-labelledby="case-title">
+      <div class="case-copy">
+        <p class="case-kicker"><span>CONTROL CASE 026</span> / AUTONOMOUS DOCUMENTS</p>
+        <h1 id="case-title">The signature is not the risk.<br><span>The gap before it is.</span></h1>
+        <p class="case-summary">SignGate freezes a generated PDF, its signer, and its SHA-256 into one consent receipt. A changed byte, changed address, or second attempt never crosses the gate.</p>
+        <dl class="case-metrics" aria-label="Approval constraints">
+          <div><dt>01</dt><dd>Exact artifact</dd></div>
+          <div><dt>01</dt><dd>Named recipient</dd></div>
+          <div><dt>01</dt><dd>Provider attempt</dd></div>
+        </dl>
+      </div>
+
+      <div class="provenance-board" id="provenance-board" data-state="brief" aria-label="Live document provenance map">
+        <div id="provenance-particles" class="provenance-particles" aria-hidden="true"></div>
+        <header class="board-head">
+          <div><span class="board-led"></span>CHAIN OF CUSTODY</div>
+          <span id="route-stage-label">INTAKE / WAITING</span>
+        </header>
+        <div class="route-map" aria-hidden="true">
+          <svg class="route-lines" viewBox="0 0 760 260" preserveAspectRatio="none">
+            <path class="route-line route-line-base" d="M70 188 C170 188 174 74 275 74 S382 188 480 188 S586 74 688 74" />
+            <path class="route-line route-line-live" id="route-line-live" d="M70 188 C170 188 174 74 275 74 S382 188 480 188 S586 74 688 74" />
+          </svg>
+          <div class="route-packet" id="route-packet"><span>PDF</span></div>
+          <div class="route-node is-active" data-route-stage="brief"><i>01</i><b>Brief</b><small>Intent</small></div>
+          <div class="route-node" data-route-stage="render"><i>02</i><b>Foxit</b><small>Artifact</small></div>
+          <div class="route-node" data-route-stage="approve"><i>03</i><b>Gate</b><small>Consent</small></div>
+          <div class="route-node" data-route-stage="send"><i>04</i><b>eSign</b><small>Dispatch</small></div>
+          <div class="route-node" data-route-stage="proof"><i>05</i><b>Proof</b><small>Terminal</small></div>
+        </div>
+        <footer class="board-foot">
+          <span>PROVIDER ROUTE</span>
+          <code>brief://local → foxit://pdf → consent://human → foxit://esign</code>
+        </footer>
+      </div>
+
+      <ol class="rail" aria-label="Workflow progress">
         <li class="active" data-stage="brief"><b>01</b><span>Brief</span></li>
         <li data-stage="render"><b>02</b><span>Foxit render</span></li>
         <li data-stage="approve"><b>03</b><span>Exact approval</span></li>
@@ -43,19 +76,19 @@
     <section class="workspace" aria-label="SignGate document workspace">
       <article class="panel brief-panel">
         <header class="panel-head">
-          <span class="panel-index">01</span>
+          <span class="panel-index">A</span>
           <div>
-            <p>Give intent, not a template</p>
-            <h2>Document brief</h2>
+            <p>INTAKE REGISTER</p>
+            <h2>State the agreement</h2>
           </div>
         </header>
         <form id="brief-form">
-          <label for="prompt">What needs to be agreed?</label>
+          <label for="prompt">Commercial intent</label>
           <textarea id="prompt" name="prompt" rows="8" required minlength="20">Prepare a mutual evaluation agreement for a 14-day AI workflow pilot. No fees, no exclusivity, confidential materials limited to the pilot, governed by Hong Kong law.</textarea>
 
           <div class="recipient-label">
-            <span>Signer</span>
-            <small>Exactly one recipient in this build</small>
+            <span>Recipient binding</span>
+            <small>One signer only</small>
           </div>
           <div class="field-row">
             <label>First name<input name="firstName" autocomplete="given-name" value="Jordan" required></label>
@@ -65,42 +98,53 @@
 
           <button class="primary" id="prepare-button" type="submit">
             <span>Prepare exact artifact</span>
-            <span class="button-arrow">↗</span>
+            <span class="button-arrow" aria-hidden="true">→</span>
           </button>
-          <p class="microcopy">The local planner structures the brief. Live mode sends the resulting HTML through Foxit's official PDF API MCP.</p>
+          <p class="microcopy">The local planner structures intent; live mode sends only the resulting HTML through Foxit's official PDF API MCP.</p>
         </form>
       </article>
 
       <article class="panel artifact-panel">
         <header class="panel-head">
-          <span class="panel-index">02</span>
+          <span class="panel-index">B</span>
           <div>
-            <p>The thing being authorized</p>
-            <h2>Exact artifact</h2>
+            <p>ARTIFACT REGISTER</p>
+            <h2>Inspect the exact bytes</h2>
           </div>
           <span class="mode-chip neutral" id="artifact-mode">NOT PREPARED</span>
         </header>
 
         <div class="paper-wrap" id="paper-wrap">
+          <span class="scanner-corner corner-a" aria-hidden="true"></span>
+          <span class="scanner-corner corner-b" aria-hidden="true"></span>
+          <span class="scanner-corner corner-c" aria-hidden="true"></span>
+          <span class="scanner-corner corner-d" aria-hidden="true"></span>
+          <div class="scan-beam" id="scan-beam" aria-hidden="true"></div>
           <div class="paper-placeholder" id="paper-placeholder">
-            <span class="ghost-hash">0000 0000</span>
-            <p>Your generated agreement will appear here.</p>
+            <span class="ghost-hash">SHA / 256</span>
+            <p>NO ARTIFACT IN THE SCANNER</p>
           </div>
           <div class="paper" id="paper" hidden>
-            <div class="paper-eyebrow">PREPARED THROUGH SIGNGATE</div>
+            <div class="paper-register"><span>SG / PREPARED</span><span id="paper-register-state">UNSIGNED</span></div>
+            <div class="paper-eyebrow">RECIPIENT-BOUND DOCUMENT</div>
             <h3 id="doc-title">Agreement</h3>
             <p class="doc-meta" id="doc-meta"></p>
             <p class="doc-purpose" id="doc-purpose"></p>
             <div id="doc-clauses"></div>
             <div class="signature-lines">
-              <span>Signer signature</span><span>Date signed</span>
+              <span class="signature-slot">
+                <svg class="signature-trace" id="signature-trace" viewBox="0 0 180 44" aria-hidden="true"><path d="M8 32 C28 4 31 38 47 19 S60 32 70 25 S82 9 86 28 C91 39 98 15 106 25 S120 29 130 16 C135 10 129 35 145 24 S158 19 171 22" /></svg>
+                <b>Signer signature</b>
+              </span>
+              <span><b>Date signed</b></span>
             </div>
           </div>
         </div>
 
         <div class="fingerprint" id="fingerprint" hidden>
-          <div>
-            <span>SHA-256</span>
+          <div class="hash-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="hash-value">
+            <span>SHA-256 / CONTENT ADDRESS</span>
             <code id="artifact-hash"></code>
           </div>
           <a id="artifact-link" href="#" target="_blank">Open artifact ↗</a>
@@ -108,72 +152,70 @@
       </article>
 
       <article class="panel gate-panel">
-        <header class="panel-head">
-          <span class="panel-index">03</span>
+        <header class="panel-head gate-heading">
+          <span class="panel-index">C</span>
           <div>
-            <p>The irreversible boundary</p>
-            <h2>Human gate</h2>
+            <p>IRREVERSIBLE BOUNDARY</p>
+            <h2>Authorize one crossing</h2>
           </div>
+          <p class="gate-explainer">The approval receipt binds the displayed recipient to the rendered hash. It is consumed before the provider call.</p>
         </header>
 
-        <div class="risk-stack" id="risk-stack">
-          <div class="empty-risk">Risk inspection begins after render.</div>
-        </div>
+        <div class="gate-layout">
+          <section class="risk-column" aria-labelledby="risk-heading">
+            <div class="subhead"><span id="risk-heading">INSPECTION FINDINGS</span><span>AUTOMATED</span></div>
+            <div class="risk-stack" id="risk-stack">
+              <div class="empty-risk">Risk inspection begins after render.</div>
+            </div>
+          </section>
 
-        <div class="approval-box is-locked" id="approval-box">
-          <div class="approval-topline">
-            <span>Required phrase</span>
-            <code id="required-phrase">APPROVE ————————</code>
-          </div>
-          <label for="approval-phrase">Type it exactly</label>
-          <input id="approval-phrase" autocomplete="off" spellcheck="false" disabled placeholder="Approval phrase">
-          <label class="check"><input type="checkbox" id="attest-recipient" disabled><span>I verified the exact recipient shown above.</span></label>
-          <label class="check"><input type="checkbox" id="attest-authority" disabled><span>I have authority to send this for signature.</span></label>
-          <button class="approve-button" id="approve-button" disabled>Issue one-shot approval</button>
-        </div>
+          <section class="approval-column" aria-label="Human approval controls">
+            <div class="approval-box is-locked" id="approval-box">
+              <div class="approval-seal" id="approval-seal" aria-hidden="true">
+                <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="42"/><path d="M60 10v12M60 98v12M10 60h12M98 60h12M25 25l9 9M86 86l9 9M95 25l-9 9M34 86l-9 9"/></svg>
+                <span id="seal-label">LOCKED</span>
+              </div>
+              <div class="approval-controls">
+                <div class="approval-topline">
+                  <span>Required phrase</span>
+                  <code id="required-phrase">APPROVE ————————</code>
+                </div>
+                <label for="approval-phrase">Type it exactly</label>
+                <input id="approval-phrase" autocomplete="off" spellcheck="false" disabled placeholder="Approval phrase">
+                <label class="check"><input type="checkbox" id="attest-recipient" disabled><span>I verified the exact recipient shown above.</span></label>
+                <label class="check"><input type="checkbox" id="attest-authority" disabled><span>I have authority to send this for signature.</span></label>
+                <button class="approve-button" id="approve-button" disabled>Issue one-shot approval</button>
+              </div>
+            </div>
 
-        <div class="action-grid">
-          <button id="send-button" class="dispatch-button" disabled>Dispatch approved artifact</button>
-          <button id="tamper-button" class="tamper-button" disabled>Change recipient, then try ↯</button>
-          <button id="final-button" class="final-button" disabled>Collect completed Foxit proof</button>
+            <div class="action-grid">
+              <button id="send-button" class="dispatch-button" disabled><span>Primary route</span>Dispatch approved artifact</button>
+              <button id="tamper-button" class="tamper-button" disabled><span>Adversarial test</span>Change recipient, then try ↯</button>
+              <button id="final-button" class="final-button" disabled><span>Terminal evidence</span>Collect completed Foxit proof</button>
+            </div>
+            <div class="gate-result" id="gate-result" hidden aria-live="assertive"></div>
+          </section>
         </div>
-        <div class="gate-result" id="gate-result" hidden aria-live="assertive"></div>
       </article>
     </section>
 
-    <section class="evidence-section">
+    <section class="evidence-section" aria-labelledby="evidence-title">
       <div class="evidence-intro">
-        <span class="section-number">04</span>
-        <p>Trust is not a green checkmark.</p>
-        <h2>It is a chain of things a judge can verify.</h2>
+        <span class="section-number">D</span>
+        <p>VERIFIABLE CLAIMS</p>
+        <h2 id="evidence-title">Evidence a judge can challenge.</h2>
       </div>
-      <div class="evidence-grid">
-        <article>
-          <span class="evidence-icon">MCP</span>
-          <h3>Official render path</h3>
-          <p><code>upload_document → pdf_from_html → download_document</code> through Foxit's published MCP package.</p>
-        </article>
-        <article>
-          <span class="evidence-icon">#</span>
-          <h3>Content-addressed consent</h3>
-          <p>The receipt stores the artifact SHA-256 and a hash of the canonical recipient—not a vague “looks good.”</p>
-        </article>
-        <article>
-          <span class="evidence-icon">1×</span>
-          <h3>No consent spillover</h3>
-          <p>One approval is burned before one provider attempt. Timeouts never trigger an automatic second email.</p>
-        </article>
-        <article>
-          <span class="evidence-icon">↯</span>
-          <h3>Adversarial proof</h3>
-          <p>Use the tamper button. A post-approval recipient mutation must produce a hard block, not a warning.</p>
-        </article>
+      <div class="evidence-ledger">
+        <article><span class="evidence-icon">MCP</span><div><h3>Official render path</h3><p><code>upload_document → pdf_from_html → download_document</code> through Foxit's published package.</p></div><b>01</b></article>
+        <article><span class="evidence-icon">#</span><div><h3>Content-addressed consent</h3><p>The receipt stores both artifact SHA-256 and canonical recipient hash.</p></div><b>02</b></article>
+        <article><span class="evidence-icon">1×</span><div><h3>No consent spillover</h3><p>Approval burns before one provider attempt; a timeout never triggers another email.</p></div><b>03</b></article>
+        <article><span class="evidence-icon">↯</span><div><h3>Adversarial proof</h3><p>A post-approval recipient mutation must hard-block with zero provider calls.</p></div><b>04</b></article>
       </div>
     </section>
 
     <section class="console-section" aria-live="polite">
       <div class="console-head">
-        <span>SIGNGATE / AUDIT FEED</span>
+        <span>SIGNGATE / APPEND-ONLY AUDIT FEED</span>
         <span id="audit-valid">CHAIN PENDING</span>
       </div>
       <ol id="event-log">
@@ -183,9 +225,9 @@
   </main>
 
   <footer class="footer">
-    <span>Built for DevNetwork [API + Cloud + AI] Hackathon 2026</span>
-    <span>Foxit PDF API MCP + Foxit eSign API</span>
-    <span>Not legal advice</span>
+    <span>DevNetwork [API + Cloud + AI] Hackathon 2026</span>
+    <span>Foxit PDF API MCP / Foxit eSign API</span>
+    <span>Operational prototype · Not legal advice</span>
   </footer>
 </body>
 </html>

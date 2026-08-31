@@ -3,6 +3,7 @@ import { basename, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AuditTrail } from './audit.js';
 import { canonicalEmail, approvalPhrase, sha256 } from './hash.js';
+import { FileDraftStore, type DraftStoreLike } from './draft-store.js';
 import { DemoESignProvider, FoxitESignProvider, eSignCredentialsPresent, liveSendEnabled, type ESignProvider } from './esign.js';
 import { DemoPdfEngine, FoxitMcpPdfEngine, foxitCredentialsPresent, type PdfEngine } from './pdf-engine.js';
 import { ResilientPlanner, type DocumentPlanner } from './planner.js';
@@ -28,6 +29,7 @@ interface SignGateServiceOptions {
   pdfEngine: PdfEngine;
   eSignProvider: ESignProvider;
   audit: AuditTrail;
+  draftStore?: DraftStoreLike;
 }
 
 function risksFor(input: PrepareDraftInput, mode: 'live' | 'demo'): RiskSignal[] {
@@ -68,6 +70,7 @@ export class SignGateService {
   readonly pdfEngine: PdfEngine;
   readonly eSignProvider: ESignProvider;
   readonly audit: AuditTrail;
+  readonly draftStore: DraftStoreLike;
 
   constructor(options: SignGateServiceOptions) {
     this.runtimeDir = resolve(options.runtimeDir);
@@ -75,6 +78,8 @@ export class SignGateService {
     this.pdfEngine = options.pdfEngine;
     this.eSignProvider = options.eSignProvider;
     this.audit = options.audit;
+    this.draftStore = options.draftStore ?? new FileDraftStore(this.runtimeDir);
+    for (const draft of this.draftStore.loadAll()) this.drafts.set(draft.id, draft);
   }
 
   async prepare(rawInput: unknown): Promise<PublicDraft> {
@@ -99,6 +104,7 @@ export class SignGateService {
       createdAt: new Date().toISOString(),
     };
     this.drafts.set(id, record);
+    await this.draftStore.save(record);
     await this.audit.append('artifact_prepared', id, {
       pdfSha256,
       recipientHash: sha256(canonicalEmail(input.recipient.email)),
@@ -129,6 +135,7 @@ export class SignGateService {
       approvedAt: new Date().toISOString(),
     };
     draft.status = 'approved';
+    await this.draftStore.save(draft);
     await this.audit.append('exact_artifact_approved', id, {
       approvalId: draft.approval.id,
       pdfSha256: draft.pdfSha256,
@@ -142,11 +149,15 @@ export class SignGateService {
     const approval = draft.approval;
     if (!approval) throw new GateError('APPROVAL_REQUIRED', 'No exact-artifact approval exists', 409);
     if (approval.consumedAt) throw new GateError('APPROVAL_SPENT', 'This one-shot approval has already been consumed', 409);
+    if (this.eSignProvider.canSend && !this.eSignProvider.canSend()) {
+      throw new GateError('LIVE_SEND_DISABLED', 'Live eSign dispatch is disarmed; enable it explicitly before consuming this approval', 409);
+    }
 
     const currentHash = sha256(draft.artifact.bytes);
     const currentRecipient = canonicalEmail(draft.recipient.email);
     if (currentHash !== approval.pdfSha256 || currentRecipient !== approval.recipientEmail) {
       draft.status = 'blocked';
+      await this.draftStore.save(draft);
       await this.audit.append('dispatch_blocked', id, {
         artifactMatch: currentHash === approval.pdfSha256,
         recipientMatch: currentRecipient === approval.recipientEmail,
@@ -155,36 +166,46 @@ export class SignGateService {
     }
 
     approval.consumedAt = new Date().toISOString();
+    draft.status = 'uncertain';
+    draft.envelope = {
+      mode: this.eSignProvider.mode,
+      status: 'uncertain',
+      detail: 'A provider attempt is in progress or was interrupted. Approval is already spent; SignGate will not retry automatically.',
+    };
+    await this.draftStore.save(draft);
     await this.audit.append('dispatch_attempted', id, {
       approvalId: approval.id,
       pdfSha256: currentHash,
       providerMode: this.eSignProvider.mode,
     });
+    let envelope;
     try {
-      draft.envelope = await this.eSignProvider.send({
+      envelope = await this.eSignProvider.send({
         title: draft.plan.title,
         recipient: draft.recipient,
         pdf: draft.artifact.bytes,
         pdfSha256: currentHash,
       });
-      draft.status = draft.envelope.status === 'sent' ? 'sent' : 'simulated';
-      await this.audit.append(draft.envelope.status === 'sent' ? 'envelope_sent' : 'dispatch_simulated', id, {
-        folderId: draft.envelope.folderId,
-        providerStatus: draft.envelope.providerStatus,
-      });
-      return this.toPublic(draft);
     } catch (error) {
-      draft.status = 'uncertain';
       draft.envelope = {
         mode: this.eSignProvider.mode,
         status: 'uncertain',
         detail: 'The provider call did not return a provable terminal result. Approval remains spent; SignGate will not retry automatically.',
       };
+      await this.draftStore.save(draft);
       await this.audit.append('dispatch_uncertain', id, {
         error: error instanceof Error ? error.message : String(error),
       });
       throw new GateError('DISPATCH_UNCERTAIN', draft.envelope.detail, 502);
     }
+    draft.envelope = envelope;
+    draft.status = envelope.status === 'sent' ? 'sent' : 'simulated';
+    await this.draftStore.save(draft);
+    await this.audit.append(envelope.status === 'sent' ? 'envelope_sent' : 'dispatch_simulated', id, {
+      folderId: envelope.folderId,
+      providerStatus: envelope.providerStatus,
+    });
+    return this.toPublic(draft);
   }
 
   async tamper(id: string, kind: 'recipient' | 'artifact'): Promise<PublicDraft> {
@@ -197,6 +218,7 @@ export class SignGateService {
     } else {
       draft.artifact = { ...draft.artifact, bytes: Buffer.concat([draft.artifact.bytes, Buffer.from('\npost-approval mutation')]) };
     }
+    await this.draftStore.save(draft);
     await this.audit.append('post_approval_mutation_injected', id, { kind });
     return this.toPublic(draft);
   }
@@ -213,6 +235,8 @@ export class SignGateService {
     const snapshot = await this.eSignProvider.status(folderId);
     const providerStatus = extractProviderStatus(snapshot);
     if (!['EXECUTED', 'COMPLETED', 'COMPLETE'].includes(providerStatus)) {
+      draft.envelope = { ...draft.envelope, ...(providerStatus ? { providerStatus } : {}) };
+      await this.draftStore.save(draft);
       await this.audit.append('signature_still_pending', id, { folderId, providerStatus });
       throw new GateError('SIGNATURE_PENDING', `Foxit envelope is ${providerStatus || 'not complete'}; no final PDF was downloaded`, 409);
     }
@@ -228,6 +252,7 @@ export class SignGateService {
       path,
     };
     draft.status = 'completed';
+    await this.draftStore.save(draft);
     await this.audit.append('signed_artifact_collected', id, { folderId, providerStatus, signedSha256 });
     return this.toPublic(draft);
   }
@@ -287,7 +312,7 @@ function extractProviderStatus(snapshot: Record<string, unknown>): string {
 
 export function createDefaultService(runtimeDir = resolve('runtime')): SignGateService {
   const pdfEngine = foxitCredentialsPresent() ? new FoxitMcpPdfEngine() : new DemoPdfEngine();
-  const eSignProvider = eSignCredentialsPresent() && liveSendEnabled() ? new FoxitESignProvider() : new DemoESignProvider();
+  const eSignProvider = eSignCredentialsPresent() ? new FoxitESignProvider() : new DemoESignProvider();
   return new SignGateService({
     runtimeDir,
     planner: new ResilientPlanner(),

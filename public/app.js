@@ -12,6 +12,7 @@ const elements = {
   artifactMode: $('#artifact-mode'),
   placeholder: $('#paper-placeholder'),
   paper: $('#paper'),
+  paperRegisterState: $('#paper-register-state'),
   title: $('#doc-title'),
   meta: $('#doc-meta'),
   purpose: $('#doc-purpose'),
@@ -21,6 +22,7 @@ const elements = {
   artifactLink: $('#artifact-link'),
   riskStack: $('#risk-stack'),
   approvalBox: $('#approval-box'),
+  sealLabel: $('#seal-label'),
   requiredPhrase: $('#required-phrase'),
   phrase: $('#approval-phrase'),
   attestRecipient: $('#attest-recipient'),
@@ -49,6 +51,10 @@ function log(message, error = false) {
   elements.log.prepend(item);
 }
 
+function emit(name, detail = {}) {
+  window.dispatchEvent(new CustomEvent(`signgate:${name}`, { detail }));
+}
+
 function setStage(stage) {
   const order = ['brief', 'render', 'approve', 'send', 'proof'];
   const current = order.indexOf(stage);
@@ -57,6 +63,7 @@ function setStage(stage) {
     item.classList.toggle('active', index === current);
     item.classList.toggle('done', index < current);
   });
+  emit('stage', { stage });
 }
 
 async function request(url, options = {}) {
@@ -75,7 +82,9 @@ async function request(url, options = {}) {
 
 function renderRuntime(runtime) {
   state.runtime = runtime;
-  const live = runtime.pdfMode === 'live' && runtime.eSignMode === 'live';
+  const dispatchArmed = runtime.eSignMode === 'live' && runtime.liveSendEnabled === true;
+  const live = runtime.pdfMode === 'live' && dispatchArmed;
+  elements.liveState.classList.remove('live', 'demo');
   elements.liveState.classList.add(live ? 'live' : 'demo');
   elements.liveState.querySelector('span:last-child').textContent = live
     ? 'Foxit live · dispatch armed'
@@ -83,6 +92,7 @@ function renderRuntime(runtime) {
       ? 'Foxit PDF live · eSign safely disarmed'
       : 'Transparent demo · no external send';
   elements.auditValid.textContent = runtime.auditChainValid ? 'HASH CHAIN VALID' : 'CHAIN INVALID';
+  emit('runtime', { live, dispatchArmed, pdfMode: runtime.pdfMode, eSignMode: runtime.eSignMode });
 }
 
 function renderDraft(draft) {
@@ -133,12 +143,37 @@ function renderDraft(draft) {
   elements.requiredPhrase.textContent = draft.approvalPhrase;
   const prepared = draft.status === 'prepared';
   const approved = draft.status === 'approved';
+  const dispatchAvailable = state.runtime?.eSignMode !== 'live' || state.runtime?.liveSendEnabled === true;
   elements.approvalBox.classList.toggle('is-locked', !prepared);
+  elements.approvalBox.classList.toggle('is-approved', ['approved', 'sent', 'completed', 'simulated', 'uncertain'].includes(draft.status));
+  elements.sealLabel.textContent = prepared
+    ? 'REVIEW'
+    : draft.status === 'approved'
+      ? 'APPROVED'
+      : draft.status === 'sent'
+        ? 'DISPATCHED'
+        : draft.status === 'completed'
+          ? 'SIGNED'
+          : draft.status === 'simulated'
+            ? 'CONSUMED'
+            : draft.status === 'uncertain'
+              ? 'SPENT'
+              : draft.status === 'blocked'
+                ? 'VOID'
+          : 'LOCKED';
+  elements.paperRegisterState.textContent = draft.status === 'completed'
+    ? 'SIGNED'
+    : ['approved', 'sent', 'simulated', 'uncertain'].includes(draft.status)
+      ? 'APPROVED'
+      : 'UNSIGNED';
   elements.phrase.disabled = !prepared;
   elements.attestRecipient.disabled = !prepared;
   elements.attestAuthority.disabled = !prepared;
   elements.approve.disabled = !prepared;
-  elements.send.disabled = !approved;
+  elements.send.disabled = !approved || !dispatchAvailable;
+  elements.send.title = approved && !dispatchAvailable
+    ? 'Live dispatch is disarmed. Set SIGNGATE_LIVE_SEND_ENABLED=true before consuming this approval.'
+    : '';
   elements.tamper.disabled = !approved;
   elements.final.disabled = !(draft.status === 'sent' && draft.envelope?.mode === 'live');
 
@@ -147,7 +182,7 @@ function renderDraft(draft) {
     elements.attestRecipient.checked = true;
     elements.attestAuthority.checked = true;
   }
-  setStage(draft.status === 'prepared' ? 'approve' : draft.status === 'approved' || draft.status === 'sent' ? 'send' : 'proof');
+  setStage(draft.status === 'prepared' ? 'approve' : draft.status === 'approved' ? 'send' : 'proof');
 }
 
 elements.form.addEventListener('submit', async (event) => {
@@ -157,6 +192,7 @@ elements.form.addEventListener('submit', async (event) => {
   elements.prepare.classList.add('busy');
   elements.prepare.querySelector('span:first-child').textContent = 'Structuring + rendering…';
   setStage('render');
+  emit('scan-start');
   log('Brief frozen. Preparing one recipient-bound artifact.');
   try {
     const draft = await request('/api/drafts', {
@@ -171,6 +207,7 @@ elements.form.addEventListener('submit', async (event) => {
       }),
     });
     renderDraft(draft);
+    emit('artifact', { hash: draft.pdfSha256, mode: draft.evidence.mode });
     const route = draft.evidence.tools.length ? draft.evidence.tools.join(' → ') : 'deterministic HTML proof';
     log(`Artifact prepared via ${route}; SHA-256 ${draft.pdfSha256.slice(0, 12)}…`);
     await refreshStatus();
@@ -178,6 +215,7 @@ elements.form.addEventListener('submit', async (event) => {
     log(error.message, true);
     setStage('brief');
   } finally {
+    emit('scan-stop');
     elements.prepare.disabled = false;
     elements.prepare.classList.remove('busy');
     elements.prepare.querySelector('span:first-child').textContent = 'Prepare exact artifact';
@@ -197,6 +235,7 @@ elements.approve.addEventListener('click', async () => {
       }),
     });
     renderDraft(draft);
+    emit('approved', { hash: draft.pdfSha256 });
     log(`One-shot approval issued for ${draft.pdfSha256.slice(0, 12)}… and the displayed recipient.`);
   } catch (error) {
     log(`Gate stayed closed: ${error.message}`, true);
@@ -212,6 +251,7 @@ elements.send.addEventListener('click', async () => {
   try {
     const draft = await request(`/api/drafts/${state.draft.id}/send`, { method: 'POST', body: '{}' });
     renderDraft(draft);
+    emit('sent', { mode: draft.envelope.mode, status: draft.envelope.status });
     log(draft.envelope.detail);
     elements.gateResult.hidden = false;
     elements.gateResult.className = 'gate-result';
@@ -242,6 +282,7 @@ elements.tamper.addEventListener('click', async () => {
     elements.gateResult.className = 'gate-result blocked';
     elements.gateResult.textContent = `EXPECTED HARD BLOCK · ${error.code} · ZERO PROVIDER CALLS`;
     setStage('proof');
+    emit('tampered', { code: error.code });
   }
 });
 
@@ -257,6 +298,7 @@ elements.final.addEventListener('click', async () => {
     elements.gateResult.className = 'gate-result';
     elements.gateResult.textContent = `FINAL FOXIT PROOF · ${draft.finalProof.providerStatus} · ${draft.finalProof.signedSha256.slice(0, 12)}…`;
     setStage('proof');
+    emit('final', { hash: draft.finalProof.signedSha256 });
   } catch (error) {
     log(`${error.code || 'FINAL_NOT_READY'}: ${error.message}`, error.code !== 'SIGNATURE_PENDING');
     elements.final.disabled = false;

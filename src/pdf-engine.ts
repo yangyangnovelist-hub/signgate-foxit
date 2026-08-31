@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -91,11 +91,12 @@ export class FoxitMcpPdfEngine implements PdfEngine {
   async prepare(html: string, draftId: string, runtimeDir: string): Promise<PreparedArtifact> {
     let sourceDocumentId: string | undefined;
     let resultDocumentId: string | undefined;
+    const sourcePath = join(runtimeDir, `${draftId}.html`);
     const outputPath = join(runtimeDir, `${draftId}.pdf`);
     try {
+      await writeFile(sourcePath, html, 'utf8');
       const upload = await this.callTool('upload_document', {
-        fileContent: Buffer.from(html, 'utf8').toString('base64'),
-        fileName: `${draftId}.html`,
+        filePath: sourcePath,
       });
       if (!upload.documentId) throw new Error('Foxit MCP upload returned no documentId');
       sourceDocumentId = upload.documentId;
@@ -129,6 +130,7 @@ export class FoxitMcpPdfEngine implements PdfEngine {
     } finally {
       if (sourceDocumentId) await this.callTool('delete_document', { documentId: sourceDocumentId }).catch(() => undefined);
       if (resultDocumentId) await this.callTool('delete_document', { documentId: resultDocumentId }).catch(() => undefined);
+      await unlink(sourcePath).catch(() => undefined);
     }
   }
 

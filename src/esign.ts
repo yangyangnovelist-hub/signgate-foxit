@@ -9,6 +9,7 @@ export interface SendEnvelopeInput {
 
 export interface ESignProvider {
   readonly mode: 'live' | 'demo';
+  canSend?(): boolean;
   send(input: SendEnvelopeInput): Promise<EnvelopeResult>;
   status?(folderId: string): Promise<Record<string, unknown>>;
   download?(folderId: string): Promise<Buffer>;
@@ -67,8 +68,12 @@ export class FoxitESignProvider implements ESignProvider {
     };
   }
 
+  canSend(): boolean {
+    return liveSendEnabled();
+  }
+
   async send(input: SendEnvelopeInput): Promise<EnvelopeResult> {
-    if (!liveSendEnabled()) throw new Error('Live eSign dispatch is disabled by SIGNGATE_LIVE_SEND_ENABLED');
+    if (!this.canSend()) throw new Error('Live eSign dispatch is disabled by SIGNGATE_LIVE_SEND_ENABLED');
     const response = await this.fetchImpl(`${this.host}/esign/api/v1/folders/createfolder`, {
       method: 'POST',
       headers: this.headers(),

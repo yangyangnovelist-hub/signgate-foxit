@@ -82,6 +82,15 @@ describe('FoxitESignProvider', () => {
     expect(String(fetchImpl.mock.calls[0]![0])).toBe('https://host.test/esign/api/v1/folders/myfolder?folderId=42');
   });
 
+  it('can inspect an existing envelope while new live dispatch is disarmed', async () => {
+    process.env.SIGNGATE_LIVE_SEND_ENABLED = 'false';
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ folder: { folderId: 42, folderStatus: 'WAITING_FOR_SIGNATURE' } }), { status: 200 }));
+    const provider = new FoxitESignProvider({ host: 'https://host.test', clientId: 'id', clientSecret: 'secret', fetchImpl: fetchImpl as typeof fetch });
+
+    await expect(provider.status('42')).resolves.toMatchObject({ folder: { folderStatus: 'WAITING_FOR_SIGNATURE' } });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+  });
+
   it('downloads completed envelope bytes', async () => {
     const fetchImpl = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(Uint8Array.from([37, 80, 68, 70]), { status: 200 }));
     const provider = new FoxitESignProvider({ host: 'https://host.test', clientId: 'id', clientSecret: 'secret', fetchImpl: fetchImpl as typeof fetch });

@@ -4,7 +4,8 @@ import { createApp } from './app.js';
 import { createDefaultService } from './service.js';
 
 const port = Number(process.env.PORT ?? 8787);
-const service = createDefaultService(resolve('runtime'));
+const runtimeDir = resolve(process.env.SIGNGATE_RUNTIME_DIR ?? 'runtime');
+const service = createDefaultService(runtimeDir);
 const app = createApp(service);
 
 app.listen(port, '127.0.0.1', () => {
