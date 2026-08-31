@@ -6,6 +6,15 @@ SignGate turns a plain-language brief into a signable agreement, renders it thro
 
 Built for the **DevNetwork [API + Cloud + AI] Hackathon 2026 — Foxit challenge**.
 
+## Judge links
+
+- **Live demo:** https://signgate-foxit-production.up.railway.app/
+- **2:19 narrated demo:** https://youtu.be/67gGCan0g7w
+- **Public source:** https://github.com/yangyangnovelist-hub/signgate-foxit
+- **Privacy-safe Foxit proof:** [`docs/evidence/foxit-live-proof.md`](docs/evidence/foxit-live-proof.md)
+
+The public deployment is deliberately in transparent demo mode, so a judge can exercise both the success and tamper paths without creating an email or Foxit envelope. The repository separately records the completed, consented Foxit sandbox run.
+
 ## Why this exists
 
 Prompt-to-document products make creation fast, then treat “Send” as a normal next step. That is the dangerous boundary. An agent can quietly rewrite a clause, change a recipient, reuse old consent, or retry after a timeout that may already have sent an invitation.
@@ -168,6 +177,8 @@ Current verified result:
 - desktop and mobile layouts have no horizontal overflow;
 - state-linked Motion and tsParticles effects load without console errors;
 - reduced-motion mode removes ambient effects;
+- the public Railway deployment passes the prepare → approve → simulated dispatch and recipient-tamper hard-block paths;
+- the 2:19 H.264/AAC judge video decodes end to end, passed YouTube copyright checks, and includes a published English subtitle track;
 - live Foxit MCP returned a visually verified 85,253-byte A4 PDF;
 - live Foxit eSign accepted one invitation to a consented self-test recipient, reached `EXECUTED`, and returned the signed PDF with a second SHA-256;
 - the completed envelope, spent approval, final PDF hash, and valid audit chain survive a cold restart while new dispatch remains disabled;
@@ -186,6 +197,8 @@ The privacy-safe provider evidence summary is in [`docs/evidence/foxit-live-proo
 | Exact-artifact / recipient gate | Real and adversarially tested |
 | One-shot approval semantics | Real and tested |
 | Browser product flow | Real and tested |
+| Public judge deployment | Live in transparent demo mode; external send disabled |
+| Narrated judge video | Published unlisted with reviewed English subtitles |
 | Official Foxit MCP adapter | Real, regression-tested, and executed against Foxit |
 | Live Foxit PDF proof | Complete; provider-rendered PDF downloaded, hashed, and visually inspected |
 | Foxit eSign activation and draft | Complete in the US-region sandbox |
@@ -210,6 +223,9 @@ The completed artifact visibly carries Foxit's `TEST MODE` watermark. It proves 
 | `docs/evidence/foxit-live-proof.md` | Privacy-safe summary of the executed Foxit sandbox proof |
 | `public/` | Judge-facing product interface |
 | `test/` | Unit, API, adapter, adversarial, and browser checks |
+| `scripts/record-demo.mjs` | Reproducible recording of the public judge flow and provider proof |
+| `scripts/build-demo.sh` | Existing Playwright/Kokoro/FFmpeg demo pipeline adapted for SignGate |
+| `video/signgate-demo.en.srt` | Reviewed English narration and subtitle timeline |
 
 ## Scope and limitations
 

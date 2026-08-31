@@ -1,9 +1,11 @@
 node_modules/
 .venv/
+__pycache__/
 dist/
 .env
 coverage/
 runtime/*
 !runtime/.gitkeep
+video/build/
 *.log
 .DS_Store

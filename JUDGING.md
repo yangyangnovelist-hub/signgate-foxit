@@ -1,5 +1,12 @@
 # SignGate judging guide
 
+- Live judge build: https://signgate-foxit-production.up.railway.app/
+- Narrated demo: https://youtu.be/67gGCan0g7w
+- Public source: https://github.com/yangyangnovelist-hub/signgate-foxit
+- Executed Foxit proof: [`docs/evidence/foxit-live-proof.md`](docs/evidence/foxit-live-proof.md)
+
+The public build is intentionally disarmed and labels itself **Transparent demo**. It proves the interactive controls without sending email. The linked evidence records the separate, completed Foxit sandbox lifecycle.
+
 ## 90-second proof
 
 1. Open the app and point to the runtime badge. It must say either **Foxit live** or **Transparent demo**.

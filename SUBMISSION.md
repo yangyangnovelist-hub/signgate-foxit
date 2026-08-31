@@ -78,4 +78,6 @@ The trustworthy product boundary is not “AI generated a correct document.” I
 
 ## Testing instructions
 
-Run `npm install && npm start`, open `http://127.0.0.1:8787`, and follow the 90-second proof in `JUDGING.md`. With the app running in demo mode, `npm run test:e2e` reproduces the browser checks. Demo mode sends nothing. For live testing, configure the Foxit variables from `.env.example`; keep `SIGNGATE_LIVE_SEND_ENABLED=false` until using a consented signer.
+Open the public judge build at https://signgate-foxit-production.up.railway.app/ and follow the 90-second proof in `JUDGING.md`. It is deliberately in transparent demo mode and sends nothing. The 2:19 narrated walkthrough is at https://youtu.be/67gGCan0g7w, and the public source is at https://github.com/yangyangnovelist-hub/signgate-foxit.
+
+For local verification, run `npm install && npm start`, open `http://127.0.0.1:8787`, then run `npm run test:e2e`. For live testing, configure the Foxit variables from `.env.example`; keep `SIGNGATE_LIVE_SEND_ENABLED=false` until using a consented signer.

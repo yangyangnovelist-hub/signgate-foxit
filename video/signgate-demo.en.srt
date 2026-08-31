@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:10,500
+Document agents can draft and route in seconds. The dangerous part is authority: did a person approve this exact file, this exact signer, and this exact consequence?
+
+2
+00:00:10,620 --> 00:00:19,000
+SignGate makes that boundary visible. One artifact, one named recipient, and one provider attempt form a chain of custody.
+
+3
+00:00:19,120 --> 00:00:31,000
+A plain-language commercial brief becomes a deterministic agreement. In live mode, Foxit's official MCP uploads the HTML, renders the PDF, downloads the bytes, and cleans up the remote intermediates.
+
+4
+00:00:31,120 --> 00:00:41,000
+Before anything can leave, the reviewer sees the exact content, full SHA-256, recipient, legal warning, external-email risk, and honest provider mode.
+
+5
+00:00:41,120 --> 00:00:49,000
+Approval requires a digest-bound phrase plus separate attestations for the recipient and the reviewer's signing authority.
+
+6
+00:00:49,120 --> 00:01:03,000
+Now the adversarial proof: after approval, the recipient is changed. SignGate fails closed with approval binding broken, records zero provider calls, and does not spend consent on the altered action.
+
+7
+00:01:03,120 --> 00:01:17,000
+On a fresh artifact, the valid route consumes the one-shot receipt before dispatch. This public deployment is transparently safe: it completes the workflow while sending no email and creating no fake Foxit envelope.
+
+8
+00:01:17,120 --> 00:01:29,000
+Foxit is load-bearing, not a logo. SignGate uses the official PDF MCP for reversible document work, then calls Foxit eSign directly only across the explicit human gate.
+
+9
+00:01:29,120 --> 00:01:36,000
+Every transition enters a persistent SHA-256 audit chain: blocked, uncertain, sent, or completed.
+
+10
+00:01:36,120 --> 00:01:44,000
+The public repository contains source, setup instructions, adversarial tests, and a privacy-safe record of the real provider run.
+
+11
+00:01:44,120 --> 00:01:58,000
+That consented self-test used Foxit's US sandbox end to end: official MCP rendering, one eSign invitation, terminal status executed, final download, a second artifact hash, and cold-restart recovery.
+
+12
+00:01:58,120 --> 00:02:11,000
+The final PDF passed structural checks, contained a non-empty signature appearance, and reported a valid detached SHA-256 signature. The post-sign validation revision rendered pixel-identically.
+
+13
+00:02:11,120 --> 00:02:19,000
+Foxit's test-mode watermark stays disclosed. This proves the sandbox mechanism, not production legal validity. AI proposes; exact human consent authorizes.
