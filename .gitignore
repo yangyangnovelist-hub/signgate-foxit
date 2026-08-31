@@ -1,0 +1,9 @@
+node_modules/
+.venv/
+dist/
+.env
+coverage/
+runtime/*
+!runtime/.gitkeep
+*.log
+.DS_Store

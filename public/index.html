@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SignGate turns a brief into a Foxit PDF, then permits eSign dispatch only for the exact artifact and recipient a human approved.">
+  <title>SignGate · Exact-artifact approval for document agents</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2317211d'/%3E%3Cpath d='M16 16h32v9H25v14h14v-7h9v16H16z' fill='%2369da86'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Sometype+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="SignGate home">
+      <span class="wordmark-mark">SG</span>
+      <span>SignGate</span>
+    </a>
+    <div class="live-state" id="live-state" aria-live="polite">
+      <span class="state-dot"></span>
+      <span>Inspecting runtime</span>
+    </div>
+    <a class="source-link" href="https://github.com/foxitsoftware/foxit-pdf-api-mcp-server" target="_blank" rel="noreferrer">Official Foxit MCP ↗</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-kicker">DOCUMENT AUTONOMY / WITH A DEAD MAN'S SWITCH</div>
+      <h1>Let the agent prepare <em>anything.</em><br>Let it send only <span>this.</span></h1>
+      <p class="hero-copy">A prompt-to-signature workflow where one human approval authorizes one exact document, one exact recipient, one time. Change a byte or an address and the gate closes.</p>
+      <ol class="rail" aria-label="Workflow">
+        <li class="active" data-stage="brief"><b>01</b><span>Brief</span></li>
+        <li data-stage="render"><b>02</b><span>Foxit render</span></li>
+        <li data-stage="approve"><b>03</b><span>Exact approval</span></li>
+        <li data-stage="send"><b>04</b><span>eSign dispatch</span></li>
+        <li data-stage="proof"><b>05</b><span>Final proof</span></li>
+      </ol>
+    </section>
+
+    <section class="workspace" aria-label="SignGate document workspace">
+      <article class="panel brief-panel">
+        <header class="panel-head">
+          <span class="panel-index">01</span>
+          <div>
+            <p>Give intent, not a template</p>
+            <h2>Document brief</h2>
+          </div>
+        </header>
+        <form id="brief-form">
+          <label for="prompt">What needs to be agreed?</label>
+          <textarea id="prompt" name="prompt" rows="8" required minlength="20">Prepare a mutual evaluation agreement for a 14-day AI workflow pilot. No fees, no exclusivity, confidential materials limited to the pilot, governed by Hong Kong law.</textarea>
+
+          <div class="recipient-label">
+            <span>Signer</span>
+            <small>Exactly one recipient in this build</small>
+          </div>
+          <div class="field-row">
+            <label>First name<input name="firstName" autocomplete="given-name" value="Jordan" required></label>
+            <label>Last name<input name="lastName" autocomplete="family-name" value="Lee" required></label>
+          </div>
+          <label>Email<input name="email" type="email" autocomplete="email" value="jordan@example.com" required></label>
+
+          <button class="primary" id="prepare-button" type="submit">
+            <span>Prepare exact artifact</span>
+            <span class="button-arrow">↗</span>
+          </button>
+          <p class="microcopy">The local planner structures the brief. Live mode sends the resulting HTML through Foxit's official PDF API MCP.</p>
+        </form>
+      </article>
+
+      <article class="panel artifact-panel">
+        <header class="panel-head">
+          <span class="panel-index">02</span>
+          <div>
+            <p>The thing being authorized</p>
+            <h2>Exact artifact</h2>
+          </div>
+          <span class="mode-chip neutral" id="artifact-mode">NOT PREPARED</span>
+        </header>
+
+        <div class="paper-wrap" id="paper-wrap">
+          <div class="paper-placeholder" id="paper-placeholder">
+            <span class="ghost-hash">0000 0000</span>
+            <p>Your generated agreement will appear here.</p>
+          </div>
+          <div class="paper" id="paper" hidden>
+            <div class="paper-eyebrow">PREPARED THROUGH SIGNGATE</div>
+            <h3 id="doc-title">Agreement</h3>
+            <p class="doc-meta" id="doc-meta"></p>
+            <p class="doc-purpose" id="doc-purpose"></p>
+            <div id="doc-clauses"></div>
+            <div class="signature-lines">
+              <span>Signer signature</span><span>Date signed</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fingerprint" id="fingerprint" hidden>
+          <div>
+            <span>SHA-256</span>
+            <code id="artifact-hash"></code>
+          </div>
+          <a id="artifact-link" href="#" target="_blank">Open artifact ↗</a>
+        </div>
+      </article>
+
+      <article class="panel gate-panel">
+        <header class="panel-head">
+          <span class="panel-index">03</span>
+          <div>
+            <p>The irreversible boundary</p>
+            <h2>Human gate</h2>
+          </div>
+        </header>
+
+        <div class="risk-stack" id="risk-stack">
+          <div class="empty-risk">Risk inspection begins after render.</div>
+        </div>
+
+        <div class="approval-box is-locked" id="approval-box">
+          <div class="approval-topline">
+            <span>Required phrase</span>
+            <code id="required-phrase">APPROVE ————————</code>
+          </div>
+          <label for="approval-phrase">Type it exactly</label>
+          <input id="approval-phrase" autocomplete="off" spellcheck="false" disabled placeholder="Approval phrase">
+          <label class="check"><input type="checkbox" id="attest-recipient" disabled><span>I verified the exact recipient shown above.</span></label>
+          <label class="check"><input type="checkbox" id="attest-authority" disabled><span>I have authority to send this for signature.</span></label>
+          <button class="approve-button" id="approve-button" disabled>Issue one-shot approval</button>
+        </div>
+
+        <div class="action-grid">
+          <button id="send-button" class="dispatch-button" disabled>Dispatch approved artifact</button>
+          <button id="tamper-button" class="tamper-button" disabled>Change recipient, then try ↯</button>
+          <button id="final-button" class="final-button" disabled>Collect completed Foxit proof</button>
+        </div>
+        <div class="gate-result" id="gate-result" hidden aria-live="assertive"></div>
+      </article>
+    </section>
+
+    <section class="evidence-section">
+      <div class="evidence-intro">
+        <span class="section-number">04</span>
+        <p>Trust is not a green checkmark.</p>
+        <h2>It is a chain of things a judge can verify.</h2>
+      </div>
+      <div class="evidence-grid">
+        <article>
+          <span class="evidence-icon">MCP</span>
+          <h3>Official render path</h3>
+          <p><code>upload_document → pdf_from_html → download_document</code> through Foxit's published MCP package.</p>
+        </article>
+        <article>
+          <span class="evidence-icon">#</span>
+          <h3>Content-addressed consent</h3>
+          <p>The receipt stores the artifact SHA-256 and a hash of the canonical recipient—not a vague “looks good.”</p>
+        </article>
+        <article>
+          <span class="evidence-icon">1×</span>
+          <h3>No consent spillover</h3>
+          <p>One approval is burned before one provider attempt. Timeouts never trigger an automatic second email.</p>
+        </article>
+        <article>
+          <span class="evidence-icon">↯</span>
+          <h3>Adversarial proof</h3>
+          <p>Use the tamper button. A post-approval recipient mutation must produce a hard block, not a warning.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="console-section" aria-live="polite">
+      <div class="console-head">
+        <span>SIGNGATE / AUDIT FEED</span>
+        <span id="audit-valid">CHAIN PENDING</span>
+      </div>
+      <ol id="event-log">
+        <li><time>BOOT</time><span>Ready. No document prepared and no external action authorized.</span></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Built for DevNetwork [API + Cloud + AI] Hackathon 2026</span>
+    <span>Foxit PDF API MCP + Foxit eSign API</span>
+    <span>Not legal advice</span>
+  </footer>
+</body>
+</html>
