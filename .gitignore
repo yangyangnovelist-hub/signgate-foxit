@@ -7,5 +7,7 @@ coverage/
 runtime/*
 !runtime/.gitkeep
 video/build/
+video/voice-reference-*.wav
+design/
 *.log
 .DS_Store

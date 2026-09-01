@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Static checks and unit tests
+        run: npm run check
+
+      - name: Coverage gates
+        run: npm run test:coverage
+
+      - name: Install Chrome for browser verification
+        run: npx playwright install --with-deps chrome
+
+      - name: Browser proof paths
+        env:
+          FOXIT_CLOUD_API_CLIENT_ID: ""
+          FOXIT_CLOUD_API_CLIENT_SECRET: ""
+          FOXIT_ESIGN_CLIENT_ID: ""
+          FOXIT_ESIGN_CLIENT_SECRET: ""
+          SIGNGATE_LIVE_SEND_ENABLED: "false"
+          SIGNGATE_PLANNER_MODE: deterministic
+          SIGNGATE_RUNTIME_DIR: /tmp/signgate-ci-runtime
+        run: |
+          npm start > /tmp/signgate-ci.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8787/api/status > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8787/api/status
+          npm run test:e2e

@@ -1,5 +1,7 @@
 # SignGate
 
+[![CI](https://github.com/yangyangnovelist-hub/signgate-foxit/actions/workflows/ci.yml/badge.svg)](https://github.com/yangyangnovelist-hub/signgate-foxit/actions/workflows/ci.yml)
+
 **One approval. One exact artifact. One provider attempt.**
 
 SignGate turns a plain-language brief into a signable agreement, renders it through Foxit's official PDF API MCP, and permits Foxit eSign dispatch only for the exact PDF and exact recipient a human approved. One approval authorizes one provider attempt. Change one byte or the email address and the gate closes.
@@ -224,7 +226,7 @@ The completed artifact visibly carries Foxit's `TEST MODE` watermark. It proves 
 | `public/` | Judge-facing product interface |
 | `test/` | Unit, API, adapter, adversarial, and browser checks |
 | `scripts/record-demo.mjs` | Reproducible recording of the public judge flow and provider proof |
-| `scripts/build-demo.sh` | Existing Playwright/Kokoro/FFmpeg demo pipeline adapted for SignGate |
+| `scripts/build-demo.sh` | Reproducible Playwright/direct Qwen3-TTS CustomVoice/FFmpeg demo pipeline |
 | `video/signgate-demo.en.srt` | Reviewed English narration and subtitle timeline |
 
 ## Scope and limitations

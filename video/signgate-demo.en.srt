@@ -1,51 +1,51 @@
 1
-00:00:00,000 --> 00:00:10,500
-Document agents can draft and route in seconds. The dangerous part is authority: did a person approve this exact file, this exact signer, and this exact consequence?
+00:00:00,000 --> 00:00:10,900
+Agents draft and send documents in seconds. The hard part is authority: did a person approve this file for this signer?
 
 2
-00:00:10,620 --> 00:00:19,000
-SignGate makes that boundary visible. One artifact, one named recipient, and one provider attempt form a chain of custody.
+00:00:11,020 --> 00:00:19,000
+SignGate binds one document, one recipient, and one provider attempt into a chain of custody.
 
 3
 00:00:19,120 --> 00:00:31,000
-A plain-language commercial brief becomes a deterministic agreement. In live mode, Foxit's official MCP uploads the HTML, renders the PDF, downloads the bytes, and cleans up the remote intermediates.
+A brief becomes an agreement. Foxit's official MCP renders and downloads the PDF, then deletes the remote files.
 
 4
 00:00:31,120 --> 00:00:41,000
-Before anything can leave, the reviewer sees the exact content, full SHA-256, recipient, legal warning, external-email risk, and honest provider mode.
+Before release, the reviewer sees exact content, its full hash, recipient, legal warning, email risk, and provider mode.
 
 5
 00:00:41,120 --> 00:00:49,000
-Approval requires a digest-bound phrase plus separate attestations for the recipient and the reviewer's signing authority.
+Approval isn't a button. It requires a hash-bound phrase, recipient confirmation, and signing authority.
 
 6
 00:00:49,120 --> 00:01:03,000
-Now the adversarial proof: after approval, the recipient is changed. SignGate fails closed with approval binding broken, records zero provider calls, and does not spend consent on the altered action.
+Now the adversarial test. After approval, I change the recipient. SignGate fails closed: the binding breaks, provider calls remain at zero, and the original consent remains unspent.
 
 7
 00:01:03,120 --> 00:01:17,000
-On a fresh artifact, the valid route consumes the one-shot receipt before dispatch. This public deployment is transparently safe: it completes the workflow while sending no email and creating no fake Foxit envelope.
+On a fresh artifact, a valid request consumes its one-shot receipt before dispatch. This public demo completes the workflow without sending email or pretending that Foxit created an envelope.
 
 8
 00:01:17,120 --> 00:01:29,000
-Foxit is load-bearing, not a logo. SignGate uses the official PDF MCP for reversible document work, then calls Foxit eSign directly only across the explicit human gate.
+Foxit is load-bearing, not a logo. Its PDF MCP handles reversible document work; eSign runs only after the human gate.
 
 9
 00:01:29,120 --> 00:01:36,000
-Every transition enters a persistent SHA-256 audit chain: blocked, uncertain, sent, or completed.
+The audit chain records every outcome: blocked, uncertain, sent, or complete.
 
 10
 00:01:36,120 --> 00:01:44,000
-The public repository contains source, setup instructions, adversarial tests, and a privacy-safe record of the real provider run.
+The public repository includes source, adversarial tests, and a privacy-safe record of the provider run.
 
 11
 00:01:44,120 --> 00:01:58,000
-That consented self-test used Foxit's US sandbox end to end: official MCP rendering, one eSign invitation, terminal status executed, final download, a second artifact hash, and cold-restart recovery.
+In Foxit's sandbox, a consented run rendered the document, sent one eSign invitation, downloaded and re-hashed the result, then recovered after a cold restart.
 
 12
 00:01:58,120 --> 00:02:11,000
-The final PDF passed structural checks, contained a non-empty signature appearance, and reported a valid detached SHA-256 signature. The post-sign validation revision rendered pixel-identically.
+The final PDF passed structural checks, showed a signature, and carried a valid detached SHA-256 signature. The validation revision rendered pixel-identically.
 
 13
 00:02:11,120 --> 00:02:19,000
-Foxit's test-mode watermark stays disclosed. This proves the sandbox mechanism, not production legal validity. AI proposes; exact human consent authorizes.
+Sandbox proof, not legal validity. AI proposes. Human consent authorizes.

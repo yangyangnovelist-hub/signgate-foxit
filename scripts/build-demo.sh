@@ -45,12 +45,56 @@ if [ -z "${VIDEO:-}" ] || [ ! -f "$VIDEO" ]; then
   exit 1
 fi
 
-echo "Generating narration from reviewed cues..."
+echo "Generating artifact-screened narration with direct Qwen3-TTS CustomVoice..."
 uv run --script scripts/synthesize-demo-narration.py
 
-NARRATION="video/build/narration-kokoro.wav"
+NARRATION_RAW="video/build/narration-qwen3.wav"
+NARRATION="video/build/narration-qwen3-master.wav"
 SRT="video/signgate-demo.en.srt"
 OUTPUT="video/build/signgate-demo.mp4"
+LOUDNORM_STATS="$(mktemp)"
+trap 'rm -f "$LOUDNORM_STATS"' EXIT
+
+echo "Building one two-pass PCM narration master..."
+ffmpeg -hide_banner -nostats -y \
+  -i "$NARRATION_RAW" \
+  -af "highpass=f=60:p=2,aresample=48000:resampler=swr:filter_size=64:phase_shift=10:linear_interp=false:exact_rational=true:filter_type=kaiser:kaiser_beta=12,loudnorm=I=-16:TP=-2.0:LRA=5:linear=true:print_format=json" \
+  -f null - 2>"$LOUDNORM_STATS"
+
+LOUDNORM_VALUES="$(node - "$LOUDNORM_STATS" <<'NODE'
+const fs = require('node:fs');
+const text = fs.readFileSync(process.argv[2], 'utf8');
+const candidates = [...text.matchAll(/\{[\s\S]*?\}/g)]
+  .map((match) => {
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+  })
+  .filter((value) => value && value.input_i !== undefined);
+const stats = candidates[candidates.length - 1];
+if (!stats) {
+  console.error('Could not parse FFmpeg loudnorm analysis.');
+  process.exit(1);
+}
+process.stdout.write([
+  stats.input_i,
+  stats.input_tp,
+  stats.input_lra,
+  stats.input_thresh,
+  stats.target_offset,
+].join('|'));
+NODE
+)"
+IFS='|' read -r INPUT_I INPUT_TP INPUT_LRA INPUT_THRESH TARGET_OFFSET <<< "$LOUDNORM_VALUES"
+
+ffmpeg -hide_banner -nostats -y \
+  -i "$NARRATION_RAW" \
+  -af "highpass=f=60:p=2,aresample=48000:resampler=swr:filter_size=64:phase_shift=10:linear_interp=false:exact_rational=true:filter_type=kaiser:kaiser_beta=12,loudnorm=I=-16:TP=-2.0:LRA=5:measured_I=${INPUT_I}:measured_TP=${INPUT_TP}:measured_LRA=${INPUT_LRA}:measured_thresh=${INPUT_THRESH}:offset=${TARGET_OFFSET}:linear=true" \
+  -ac 1 -ar 48000 -c:a pcm_s24le \
+  "$NARRATION"
+
 VIDEO_DURATION="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$VIDEO")"
 NARRATION_DURATION="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$NARRATION")"
 VIDEO_TIME_SCALE="$(awk -v video="$VIDEO_DURATION" -v narration="$NARRATION_DURATION" 'BEGIN { printf "%.9f", narration / video }')"
@@ -63,7 +107,7 @@ if ffmpeg -hide_banner -filters 2>/dev/null | grep -qE '[[:space:]]subtitles[[:s
     -vf "setpts=${VIDEO_TIME_SCALE}*PTS,subtitles=filename='${SRT}':force_style='FontName=Arial,FontSize=18,Outline=1,Shadow=0,MarginV=24'" \
     -map 0:v:0 -map 1:a:0 \
     -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p \
-    -c:a aac -b:a 160k -movflags +faststart -shortest \
+    -c:a aac -b:a 192k -ar 48000 -t "$NARRATION_DURATION" -movflags +faststart \
     "$OUTPUT"
 else
   ffmpeg -y \
@@ -73,9 +117,9 @@ else
     -map 0:v:0 -map 1:a:0 -map 2:0 \
     -vf "setpts=${VIDEO_TIME_SCALE}*PTS" \
     -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p \
-    -c:a aac -b:a 160k \
+    -c:a aac -b:a 192k -ar 48000 \
     -c:s mov_text -metadata:s:s:0 language=eng -disposition:s:0 default \
-    -movflags +faststart -shortest \
+    -t "$NARRATION_DURATION" -movflags +faststart \
     "$OUTPUT"
 fi
 
