@@ -1,7 +1,7 @@
 # SignGate judging guide
 
 - Live judge build: https://signgate-foxit-production.up.railway.app/
-- Narrated demo: https://youtu.be/67gGCan0g7w
+- Narrated demo: https://youtu.be/-KQ27Cqxdfk
 - Public source: https://github.com/yangyangnovelist-hub/signgate-foxit
 - Executed Foxit proof: [`docs/evidence/foxit-live-proof.md`](docs/evidence/foxit-live-proof.md)
 

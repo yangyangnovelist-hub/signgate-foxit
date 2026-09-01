@@ -11,7 +11,7 @@ Built for the **DevNetwork [API + Cloud + AI] Hackathon 2026 — Foxit challenge
 ## Judge links
 
 - **Live demo:** https://signgate-foxit-production.up.railway.app/
-- **2:19 narrated demo:** https://youtu.be/67gGCan0g7w
+- **2:19 narrated demo:** https://youtu.be/-KQ27Cqxdfk
 - **Public source:** https://github.com/yangyangnovelist-hub/signgate-foxit
 - **Privacy-safe Foxit proof:** [`docs/evidence/foxit-live-proof.md`](docs/evidence/foxit-live-proof.md)
 
