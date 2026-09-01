@@ -170,7 +170,7 @@ npm run test:coverage
 Current verified result:
 
 - **48 tests passing**;
-- **92.79% statements / lines, 75.52% branches, and 95.16% functions coverage** across the tested application core;
+- **92.46% statements / lines, 75.52% branches, and 95.16% functions coverage** across the tested application core;
 - TypeScript strict typecheck passing;
 - npm audit: **0 known vulnerabilities**;
 - local Ollama real inference verified;

@@ -47,7 +47,7 @@ npm run check
 npm run test:coverage
 ```
 
-Expected baseline: 48 tests; at least 85% statements and lines, 72% branches, and 82% functions. Current observed coverage is 92.79% statements/lines, 75.52% branches, and 95.16% functions.
+Expected baseline: 48 tests; at least 85% statements and lines, 72% branches, and 82% functions. Current observed coverage is 92.46% statements/lines, 75.52% branches, and 95.16% functions.
 
 ## Submission boundary
 
